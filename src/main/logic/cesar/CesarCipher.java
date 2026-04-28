@@ -1,67 +1,64 @@
 package logic.cesar;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 public class CesarCipher {
-    private static final String ABC_MASTER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String ABC_CLARO = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    // CIFRADO NORMAL
     public static String cifrarNormal(String texto) {
-        StringBuilder res = new StringBuilder();
-        for (char c : texto.toUpperCase().toCharArray()) {
-            int pos = ABC_MASTER.indexOf(c);
-            if (pos == -1) res.append(c);
-            else res.append(ABC_MASTER.charAt((pos + 3) % 26));
-        }
-        return res.toString();
+        return ejecutarDesplazamiento(texto, 3);
     }
 
-    // CIFRADO POR POSICIONES
     public static String cifrarPorPosicion(String texto, int n) {
+        return ejecutarDesplazamiento(texto, n);
+    }
+
+    private static String ejecutarDesplazamiento(String texto, int n) {
         StringBuilder res = new StringBuilder();
         for (char c : texto.toUpperCase().toCharArray()) {
-            int pos = ABC_MASTER.indexOf(c);
+            int pos = ABC_CLARO.indexOf(c);
             if (pos == -1) res.append(c);
-            else res.append(ABC_MASTER.charAt((pos + n) % 26));
+            else res.append(ABC_CLARO.charAt((pos + n) % 26));
         }
         return res.toString();
     }
 
-    // CIFRADO CON CLAVE (ESTRICTO)
     public static String cifrarConClave(String texto, String clave) {
-        if (clave == null || clave.isEmpty()) return texto;
+        clave = clave.toUpperCase().replace(" ", "");
         
-        String claveLimpia = clave.toUpperCase().replace(" ", "");
-        texto = texto.toUpperCase();
-        
-        // 1. Crear la secuencia sin repeticiones
+        // 1. CONSTRUIR TU ALFABETO ESPECIAL EXACTO
+        // Secuencia: 'D' + CLAVE + RESTO DEL ABC
         LinkedHashSet<Character> set = new LinkedHashSet<>();
-        for (char c : claveLimpia.toCharArray()) {
-            if (ABC_MASTER.indexOf(c) != -1) set.add(c);
-        }
-        for (int i = 0; i < 26; i++) {
-            set.add(ABC_MASTER.charAt(i));
+        
+        // Primero la D 
+        set.add('D'); 
+        
+        // Luego la clave 
+        for (char c : clave.toCharArray()) {
+            if (ABC_CLARO.indexOf(c) != -1) set.add(c);
         }
         
-        ArrayList<Character> lista = new ArrayList<>(set);
-        
-        // 2. Mapear al alfabeto cifrado (Empezando en D = pos 3)
-        char[] mapaCifrado = new char[26];
+        // Luego el resto del abecedario para completar las 26 letras
         for (int i = 0; i < 26; i++) {
-            mapaCifrado[(i + 3) % 26] = lista.get(i);
+            set.add(ABC_CLARO.charAt(i));
         }
+        
+        // Convertimos el conjunto a un String (Mapa)
+        StringBuilder sb = new StringBuilder();
+        for (char c : set) sb.append(c);
+        String abcCifrado = sb.toString();
 
-        // 3. Generar resultado
-        StringBuilder finalRes = new StringBuilder();
-        String mapaStr = new String(mapaCifrado);
-        
-        for (char c : texto.toCharArray()) {
-            int idx = ABC_MASTER.indexOf(c);
-            if (idx == -1) finalRes.append(c);
-            else finalRes.append(mapaStr.charAt(idx));
+        // 2. PROCESO DE SUSTITUCIÓN
+        StringBuilder resultado = new StringBuilder();
+        for (char c : texto.toUpperCase().toCharArray()) {
+            int pos = ABC_CLARO.indexOf(c);
+            if (pos == -1) {
+                resultado.append(c);
+            } else {
+                // Buscamos la letra en la misma posición de tu alfabeto especial
+                resultado.append(abcCifrado.charAt(pos));
+            }
         }
-        
-        return finalRes.toString();
+        return resultado.toString();
     }
 }
